@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.theluckystrike/student-loan-repayment-assistance-plan-calculator-mcp",
+  "title": "Student Loan RAP Calculator",
+  "description": "Student loan Repayment Assistance Plan (RAP) payment, 2026 loan limits, SAVE/PAYE/ICR dates (P.L. 119-21).",
+  "version": "1.0.0",
+  "websiteUrl": "https://github.com/theluckystrike/student-loan-repayment-assistance-plan-calculator-mcp",
+  "repository": {
+    "url": "https://github.com/theluckystrike/student-loan-repayment-assistance-plan-calculator-mcp",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://student-loan-repayment-assistance-plan-calculator-mcp.lipmichal.workers.dev/mcp"
+    }
+  ]
+}

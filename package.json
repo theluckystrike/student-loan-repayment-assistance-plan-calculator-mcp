@@ -1,0 +1,42 @@
+{
+  "name": "student-loan-repayment-assistance-plan-calculator-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the federal student loan Repayment Assistance Plan (RAP) payment, 2026 loan limits and SAVE/PAYE/ICR transition dates.",
+  "type": "module",
+  "bin": {
+    "student-loan-repayment-assistance-plan-calculator-mcp": "dist/stdio.js"
+  },
+  "main": "dist/stdio.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "DATA_SOURCES.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": ["mcp", "mcp-server", "model-context-protocol", "claude", "student-loans", "repayment-assistance-plan", "rap", "student-loan-calculator", "idr", "save-plan", "pslf", "parent-plus", "one-big-beautiful-bill"],
+  "author": "theluckystrike",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theluckystrike/student-loan-repayment-assistance-plan-calculator-mcp.git"
+  },
+  "homepage": "https://github.com/theluckystrike/student-loan-repayment-assistance-plan-calculator-mcp",
+  "mcpName": "io.github.theluckystrike/student-loan-repayment-assistance-plan-calculator-mcp",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^4.40.0"
+  }
+}
