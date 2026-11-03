@@ -13,7 +13,7 @@ https://student-loan-repayment-assistance-plan-calculator-mcp.lipmichal.workers.
 | Tool | What it does |
 |---|---|
 | `calculate_rap_payment` | RAP monthly payment from AGI and dependents. With balance and rate, also the first month (interest waived, $50 principal match) and a constant-income projection to payoff or cancellation after 360 payments. |
-| `compare_rap_vs_standard` | RAP against the Tiered Standard plan and the 10-year Standard plan: monthly payment, months, total paid, amount cancelled, PSLF eligibility. |
+| `compare_rap_vs_standard` | RAP against the Tiered Standard plan and the 10-year Standard plan: monthly payment, months, total paid, amount cancelled, PSLF eligibility, and which plan is lowest on each measure. |
 | `get_federal_loan_limits` | Undergraduate, graduate, professional and Parent PLUS limits in force on a date, before or after July 1, 2026, with the interim exception and the $257,500 lifetime cap. |
 | `get_plan_transition_dates` | Every dated step from July 4, 2025 to July 1, 2028, marked past or upcoming, and the current status of SAVE, PAYE, ICR, IBR, RAP and the fixed plans. |
 
@@ -24,7 +24,7 @@ Every result has structured JSON, a plain-English summary, `as_of`, `source` (th
 - RAP base payment is a percent of the whole AGI by band: $120 a year at $10,000 or less, then 1% (over $10,000) up to 10% (over $100,000). Divide by 12, subtract $50 per dependent, and never pay less than $10.
 - Because the percent applies to all of AGI, $50,001 pays 5% ($208.34 a month) while $50,000 pays 4% ($166.67).
 - On-time RAP payments that do not cover the month's interest: the unpaid interest is not charged. If principal drops by less than $50, the Department adds a match so it drops by the lesser of $50 or the payment.
-- The remaining balance is cancelled after 360 qualifying payments. RAP counts for PSLF. The Tiered Standard plan does not.
+- The remaining balance is cancelled after 360 qualifying payments. On-time RAP payments and 10-year Standard payments count for PSLF (HEA 455(m)(1)(A) as amended by P.L. 119-21 sec. 82004). The Tiered Standard plan does not (StudentAid.gov).
 - Tiered Standard: 10 years under $25,000, 15 under $50,000, 20 under $100,000, 25 at $100,000 or more.
 - From July 1, 2026: Grad PLUS ends for new borrowers, graduate loans cap at $20,500 a year and $100,000, professional at $50,000 and $200,000, Parent PLUS at $20,000 a year and $65,000 per student, and $257,500 lifetime.
 - A court order ended SAVE in March 2026. Servicers send 90-day notices from July 1, 2026, then a final 30-day notice. PAYE and ICR end no later than July 1, 2028, when remaining borrowers go to RAP or IBR.

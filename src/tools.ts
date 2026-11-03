@@ -7,7 +7,7 @@ import {
 } from "./core.js";
 
 export const SERVER_NAME = "student-loan-repayment-assistance-plan-calculator-mcp";
-export const SERVER_VERSION = "1.0.0";
+export const SERVER_VERSION = "1.0.1";
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -68,7 +68,7 @@ export function registerTools(server: McpServer): void {
     {
       title: "Compare RAP with the Tiered Standard and 10-year Standard plans",
       description:
-        "Compares the new Repayment Assistance Plan with the Tiered Standard plan (P.L. 119-21: 10 years under $25,000, 15 under $50,000, 20 under $100,000, 25 at $100,000 or more) and, for borrowers with no loan made on or after July 1, 2026, the 10-year Standard plan. Returns monthly payment, months, total paid, interest waived, principal match and the amount cancelled after 360 RAP payments, assuming constant income and on-time payments. Says which plans count for PSLF (RAP yes, Tiered Standard no).",
+        "Compares the new Repayment Assistance Plan with the Tiered Standard plan (P.L. 119-21: 10 years under $25,000, 15 under $50,000, 20 under $100,000, 25 at $100,000 or more) and, for borrowers with no loan made on or after July 1, 2026, the 10-year Standard plan. Returns monthly payment, months, total paid, interest waived, principal match and the amount cancelled after 360 RAP payments, assuming constant income and on-time payments. Names the plan with the lowest monthly payment and the lowest total paid across all plans shown, and says which count for PSLF (RAP and 10-year Standard yes, Tiered Standard no; HEA 455(m)(1)(A)).",
       inputSchema: {
         balance: z.number().positive().max(100000000).describe("Total Direct Loan principal in dollars."),
         rate: z.number().min(0).max(20).describe("Weighted annual interest rate in percent."),
@@ -83,7 +83,10 @@ export function registerTools(server: McpServer): void {
       const rap = r.plans.repayment_assistance_plan, t = r.plans.tiered_standard, s10 = r.plans.standard_10_year;
       let s = `For ${money(r.balance)} at ${r.rate}% and AGI ${money(r.agi)}: RAP ${money(rap.monthly_payment)} a month, ${rap.paid_off ? `paid off in ${rap.months_paid} months` : `${money(rap.forgiven_after_360)} cancelled after 360 payments`}, total ${money(rap.total_paid)}. Tiered Standard (${t.years} years) ${money(t.monthly_payment)} a month, total ${money(t.total_paid)}.`;
       if (s10.available) s += ` 10-year Standard ${money(s10.monthly_payment)} a month, total ${money(s10.total_paid)}.`;
-      s += ` Lower monthly payment: ${r.lower_monthly_payment === "repayment_assistance_plan" ? "RAP" : "Tiered Standard"}. Lower total paid: ${r.lower_total_paid === "repayment_assistance_plan" ? "RAP" : "Tiered Standard"}. Only RAP counts toward PSLF.`;
+      const label: Record<string, string> = { repayment_assistance_plan: "RAP", tiered_standard: "Tiered Standard", standard_10_year: "10-year Standard" };
+      const names = (xs: string[]) => xs.map((x) => label[x]).join(" and ") + (xs.length > 1 ? " (tie)" : "");
+      s += ` Lowest monthly payment: ${names(r.lowest_monthly_payment_plans)}. Lowest total paid: ${names(r.lowest_total_paid_plans)}.`;
+      s += s10.available ? " RAP and the 10-year Standard plan count toward PSLF; Tiered Standard does not." : " RAP counts toward PSLF; Tiered Standard does not.";
       return reply(s, r, SOURCES.statute);
     }),
   );

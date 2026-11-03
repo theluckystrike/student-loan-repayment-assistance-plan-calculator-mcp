@@ -142,6 +142,24 @@ export function calculateRapPayment(input) {
     out.regulation_note = REGULATION_NOTE;
     return out;
 }
+// ---------------------------------------------------------------- PSLF
+/** HEA sec. 455(m)(1)(A) as amended by P.L. 119-21 sec. 82004, and StudentAid.gov SAVE FAQ question 10 (October 2026). */
+export const PSLF_NOTE = {
+    counts: [
+        "On-time payments under the Repayment Assistance Plan (HEA 455(m)(1)(A)(v), added by P.L. 119-21 sec. 82004).",
+        "Payments under the 10-year Standard plan (HEA 455(m)(1)(A)(ii)).",
+        "Payments under Income-Based Repayment (HEA 455(m)(1)(A)(i)) and, until it ends, ICR/PAYE (455(m)(1)(A)(iv)).",
+        "Payments under another pre-July 2026 plan of at least the 10-year Standard amount (HEA 455(m)(1)(A)(iii)).",
+    ],
+    does_not_count: ["Payments under the Tiered Standard plan (HEA 455(d)(7)(A)(i)) are not listed in 455(m)(1)(A); StudentAid.gov says they do not count toward PSLF."],
+    summary: "RAP and the 10-year Standard plan both count toward PSLF; the Tiered Standard plan does not.",
+    sources: [
+        "https://www.law.cornell.edu/uscode/text/20/1087e (20 U.S.C. 1087e(m)(1)(A), as amended)",
+        "https://www.govinfo.gov/content/pkg/PLAW-119publ21/html/PLAW-119publ21.htm (sec. 82004)",
+        "https://studentaid.gov/articles/save/ (question 10, published October 2026)",
+    ],
+    as_of: "2026-11-03",
+};
 // ---------------------------------------------------------------- Standard plans
 /** Tiered Standard plan term for loans made on or after July 1, 2026 (sec. 455(d)(7)(A)(i)). */
 export function tieredStandardYears(totalPrincipal) {
@@ -190,19 +208,33 @@ export function compareRapVsStandard(input) {
         tiered_standard: { ...tiered, available: true, pslf_qualifying: false, rule: "10 years under $25,000; 15 years $25,000 to under $50,000; 20 years $50,000 to under $100,000; 25 years $100,000 or more (total principal when entering repayment)." },
     };
     if (!newLoan) {
-        plans.standard_10_year = { ...standardTotals(balance, rate, 10), available: true, note: "Only for borrowers with no Direct Loan made on or after July 1, 2026." };
+        plans.standard_10_year = { ...standardTotals(balance, rate, 10), available: true, pslf_qualifying: true, note: "Only for borrowers with no Direct Loan made on or after July 1, 2026. Payments count for PSLF, but 120 payments under this plan pay the loan off, so PSLF has nothing left to cancel." };
     }
     else {
         plans.standard_10_year = { available: false, note: "Not available: a borrower with any loan made on or after July 1, 2026 may choose only the Tiered Standard plan or RAP for all Direct Loans." };
     }
-    const cheaperMonthly = rapPay.payment < tiered.monthly_payment ? "repayment_assistance_plan" : "tiered_standard";
-    const rapTotal = sim.total_paid;
-    const cheaperTotal = rapTotal < tiered.total_paid ? "repayment_assistance_plan" : "tiered_standard";
+    // Rank every available plan on the actual numbers, so the summary can never name a plan that is not lowest.
+    const candidates = [
+        { plan: "repayment_assistance_plan", monthly: rapPay.payment, total: sim.total_paid },
+        { plan: "tiered_standard", monthly: tiered.monthly_payment, total: tiered.total_paid },
+    ];
+    const s10 = plans.standard_10_year;
+    if (s10.available)
+        candidates.push({ plan: "standard_10_year", monthly: s10.monthly_payment, total: s10.total_paid });
+    const lowest = (key) => {
+        const min = Math.min(...candidates.map((c) => c[key]));
+        return candidates.filter((c) => Math.abs(c[key] - min) < 0.005).map((c) => c.plan);
+    };
+    const lowestMonthly = lowest("monthly");
+    const lowestTotal = lowest("total");
     return {
         balance, rate, agi, dependents, has_loan_on_or_after_2026_07_01: newLoan,
         plans,
-        lower_monthly_payment: cheaperMonthly,
-        lower_total_paid: cheaperTotal,
+        lower_monthly_payment: lowestMonthly[0],
+        lower_total_paid: lowestTotal[0],
+        lowest_monthly_payment_plans: lowestMonthly,
+        lowest_total_paid_plans: lowestTotal,
+        pslf: PSLF_NOTE,
         assumptions: [
             "Income and dependents stay the same every year; in reality RAP is recalculated each year from new AGI.",
             "Interest is computed monthly at rate/12 on the balance; servicers accrue simple daily interest.",
@@ -294,7 +326,7 @@ export function getPlanTransitionDates(input = {}) {
             ICR: "Available only for Direct Loans disbursed before July 1, 2026; ends no later than July 1, 2028. The statutory repeal is effective July 1, 2028.",
             IBR: "Stays. Direct and FFEL loans disbursed before July 1, 2026. No partial financial hardship requirement since July 4, 2025.",
             RAP: "Open since July 1, 2026 for Direct Loans disbursed at any time, except Parent PLUS and consolidation loans that repaid Parent PLUS. 30-year (360 qualifying payments) horizon.",
-            Tiered_Standard: "For borrowers with any loan made on or after July 1, 2026: 10, 15, 20 or 25 years by balance. Does not count for PSLF.",
+            Tiered_Standard: "For borrowers with any loan made on or after July 1, 2026: 10, 15, 20 or 25 years by balance. Does not count for PSLF (StudentAid.gov).",
             Standard_Graduated_Extended: "Only for borrowers whose loans were all disbursed before July 1, 2026.",
         },
         regulation_note: "Dates are from the statute and StudentAid.gov. Your own SAVE deadline is 90 days from your servicer's notice, not from an FSA email. Check your servicer inbox.",
